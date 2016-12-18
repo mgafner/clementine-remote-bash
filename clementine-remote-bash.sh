@@ -57,22 +57,27 @@ OPTIONS:
 	commands can be:
 	  play
 	  pause
+          playlist
+          playlists
 
   -g    get info
   -h    list all commands
+  -p    set playlist
 
 examples:
 
   $(basename $0) -c play
   $(basename $0) -g title
   $(basename $0) -g status
+  $(basename $0) -g playlists
+  $(basename $0) -p <some-playlist>
 
 EOF
 return 0
 }
 
 # ------------------------------------------------------------------------------
-run-cmd()
+runcmd()
 # ------------------------------------------------------------------------------
 {
   case $1 in
@@ -91,22 +96,50 @@ run-cmd()
 }
 
 # ------------------------------------------------------------------------------
-get-info()
+setplaylist()
+# ------------------------------------------------------------------------------
+# $1 = Playlist name
+{
+  playlistobject=`$0 -g playlists | grep "$1" | awk '{print $1}'`
+  if [ ! -z "$playlistobject" ]; then
+    qdbus org.mpris.MediaPlayer2.clementine /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Playlists.ActivatePlaylist $playlistobject
+  fi
+}
+
+# ------------------------------------------------------------------------------
+getinfo()
 # ------------------------------------------------------------------------------
 {
   case $1 in
     artist)
-        qdbus $DBUSBASE org.freedesktop.DBus.Properties.Get org.mpris.MediaPlayer2.Player Metadata | grep artist | awk '{$1=""; print substr($0,2)}'
+        qdbus $DBUSBASE org.freedesktop.DBus.Properties.Get org.mpris.MediaPlayer2.Player Metadata | awk '/artist:/{$1=""; print substr($0,2)}'
       ;;
     metadata)
         qdbus $DBUSBASE org.freedesktop.DBus.Properties.Get org.mpris.MediaPlayer2.Player Metadata
+      ;;
+    playlist)
+        qdbus --literal org.mpris.MediaPlayer2.clementine /org/mpris/MediaPlayer2  \
+          org.freedesktop.DBus.Properties.Get org.mpris.MediaPlayer2.Playlists ActivePlaylist \
+          | awk '{ print $8 "\t" $9 }' \
+          | sed 's/]//g;s/"//g;s/,//g'
+      ;;        
+    playlists)
+        dbus-send --type=method_call --print-reply \
+          --dest=org.mpris.MediaPlayer2.clementine \
+          /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Playlists.GetPlaylists \
+          uint32:1 uint32:50 string:Alphabetical boolean:false  \
+          | grep -Ev 'method|array|struct|}|string ""|]' \
+          | sed 'N;s/\n/ /' \
+          | sed 's/"//g' \
+          | awk '{ print $3 "\t" $5 }'
       ;;
     status)
         qdbus $DBUSBASE org.freedesktop.DBus.Properties.Get org.mpris.MediaPlayer2.Player PlaybackStatus
       ;;
     title)
-        qdbus $DBUSBASE org.freedesktop.DBus.Properties.Get org.mpris.MediaPlayer2.Player Metadata | grep title | awk '{$1=""; print substr($0,2)}'
+        qdbus $DBUSBASE org.freedesktop.DBus.Properties.Get org.mpris.MediaPlayer2.Player Metadata | awk '/title:/{$1=""; print substr($0,2)}'
       ;;
+  
     *)
         echo "command $1 not known or not implemented"
         exit 1
@@ -129,20 +162,21 @@ trap control_c $SIGINT
 #
 # please keep letters in alphabetic order
 #
-while getopts ":c:g:hs:" OPTION
+while getopts ":c:g:hp:s:" OPTION
 do
   case $OPTION in
     c)
-      GETOPTS_COMMAND="$OPTARG"
-      run-cmd "$GETOPTS_COMMAND"
+      runcmd "$OPTARG"
       ;; 
     g)
-      GETOPTS_COMMAND="$OPTARG"
-      get-info "$GETOPTS_COMMAND"
+      getinfo "$OPTARG"
       ;;
     h)
       usage
       exit 1
+      ;;
+    p)
+      setplaylist "$OPTARG"
       ;;
     \?)
       usage
