@@ -100,10 +100,18 @@ setplaylist()
 # ------------------------------------------------------------------------------
 # $1 = Playlist name
 {
+  echo "state: $1" >> /tmp/playlist.log
   playlistobject=`$0 -g playlists | grep "$1" | awk '{print $1}'`
   if [ ! -z "$playlistobject" ]; then
-    qdbus org.mpris.MediaPlayer2.clementine /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Playlists.ActivatePlaylist $playlistobject
+    qdbus $DBUSBASE org.mpris.MediaPlayer2.Playlists.ActivatePlaylist $playlistobject
   fi
+}
+
+# ------------------------------------------------------------------------------
+setvolume()
+# ------------------------------------------------------------------------------
+{
+  qdbus $DBUSBASE org.freedesktop.DBus.Properties.Set org.mpris.MediaPlayer2.Player Volume $1
 }
 
 # ------------------------------------------------------------------------------
@@ -139,7 +147,9 @@ getinfo()
     title)
         qdbus $DBUSBASE org.freedesktop.DBus.Properties.Get org.mpris.MediaPlayer2.Player Metadata | awk '/title:/{$1=""; print substr($0,2)}'
       ;;
-  
+    volume)
+        qdbus $DBUSBASE org.freedesktop.DBus.Properties.Get org.mpris.MediaPlayer2.Player Volume
+      ;;
     *)
         echo "command $1 not known or not implemented"
         exit 1
@@ -162,7 +172,7 @@ trap control_c $SIGINT
 #
 # please keep letters in alphabetic order
 #
-while getopts ":c:g:hp:s:" OPTION
+while getopts ":c:g:hp:s:v:" OPTION
 do
   case $OPTION in
     c)
@@ -177,6 +187,9 @@ do
       ;;
     p)
       setplaylist "$OPTARG"
+      ;;
+    v)
+      setvolume "$OPTARG"
       ;;
     \?)
       usage
