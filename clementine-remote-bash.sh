@@ -81,11 +81,20 @@ runcmd()
 # ------------------------------------------------------------------------------
 {
   case $1 in
-    play)
-	qdbus $DBUSBASE org.mpris.MediaPlayer2.Player.Play
+    next)
+        qdbus $DBUSBASE org.mpris.MediaPlayer2.Player.Next 
       ;;
     pause)
         qdbus $DBUSBASE org.mpris.MediaPlayer2.Player.Pause 
+      ;;
+    play)
+	qdbus $DBUSBASE org.mpris.MediaPlayer2.Player.Play
+      ;;
+    prev)
+	qdbus $DBUSBASE org.mpris.MediaPlayer2.Player.Previous
+      ;;
+    shuffle)
+        shuffle
       ;;
     *)
         echo "command $1 not known or not implemented"
@@ -115,6 +124,14 @@ setvolume()
 }
 
 # ------------------------------------------------------------------------------
+shuffle()
+# ------------------------------------------------------------------------------
+{
+  qdbus $DBUSBASE org.freedesktop.DBus.Properties.Set org.mpris.MediaPlayer2.Player Shuffle false
+  qdbus $DBUSBASE org.freedesktop.DBus.Properties.Set org.mpris.MediaPlayer2.Player Shuffle true
+}
+
+# ------------------------------------------------------------------------------
 getinfo()
 # ------------------------------------------------------------------------------
 {
@@ -140,6 +157,12 @@ getinfo()
           | sed 'N;s/\n/ /' \
           | sed 's/"//g' \
           | awk '{ print $3 "\t" $5 }'
+      ;;
+    position)
+        qdbus $DBUSBASE org.freedesktop.DBus.Properties.Get org.mpris.MediaPlayer2.Player Position
+      ;;
+    shuffle)
+        qdbus $DBUSBASE org.freedesktop.DBus.Properties.Get org.mpris.MediaPlayer2.Player Shuffle
       ;;
     status)
         qdbus $DBUSBASE org.freedesktop.DBus.Properties.Get org.mpris.MediaPlayer2.Player PlaybackStatus
