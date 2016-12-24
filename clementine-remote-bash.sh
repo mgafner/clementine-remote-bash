@@ -90,6 +90,9 @@ runcmd()
     play)
 	qdbus $DBUSBASE org.mpris.MediaPlayer2.Player.Play
       ;;
+    playpause)
+	qdbus $DBUSBASE org.mpris.MediaPlayer2.Player.PlayPause
+      ;;
     prev)
 	qdbus $DBUSBASE org.mpris.MediaPlayer2.Player.Previous
       ;;
@@ -109,9 +112,9 @@ setplaylist()
 # ------------------------------------------------------------------------------
 # $1 = Playlist name
 {
-  echo "state: $1" >> /tmp/playlist.log
   playlistobject=`$0 -g playlists | grep "$1" | awk '{print $1}'`
   if [ ! -z "$playlistobject" ]; then
+    shuffle
     qdbus $DBUSBASE org.mpris.MediaPlayer2.Playlists.ActivatePlaylist $playlistobject
   fi
 }
@@ -128,6 +131,7 @@ shuffle()
 # ------------------------------------------------------------------------------
 {
   qdbus $DBUSBASE org.freedesktop.DBus.Properties.Set org.mpris.MediaPlayer2.Player Shuffle false
+  sleep 1
   qdbus $DBUSBASE org.freedesktop.DBus.Properties.Set org.mpris.MediaPlayer2.Player Shuffle true
 }
 
