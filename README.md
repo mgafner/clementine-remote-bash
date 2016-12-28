@@ -10,25 +10,55 @@ Clementine is a modern music player and library organizer for Windows, Linux and
    * Latest developer builds: http://builds.clementine-player.org/
 
 ## About Clementine Remote Bash
-clementine-remote enables you to remote control Clementine from a bash terminal over the network. This is useful for automation tasks. 
+clementine-remote enables you to remote control Clementine from a bash terminal on the same computer clementine is running on. This is useful for automation tasks. 
+
+(first idea for the script was to remote control clementine over the network. But this needs more investigation in the protocol buffer on command line. So for this time now we control with dbus-commands.)
 
 ## Installation
 #### Prerequisites
+   * qdbus
+
+#### Prerequisites (for network remote control, not yet implemented)
    * protoc protobuf-compiler
    * curl
 
 #### Debian / Ubuntu
 ```
-sudo apt-get install protobuf-compiler curl
-
+sudo apt-get install qdbus
 ```
 
 ## Usage
 ```
-./clementine-remote [play|pause|prev|next|stop]
+usage: clementine-remote-bash.sh -g <info-to-get> 
+
+OPTIONS:
+  -c    command
+	
+	commands can be:
+	  play
+	  pause
+          playlist
+          playlists
+
+  -g    get info
+  -h    list all commands
+  -p    set playlist
+
+examples:
+
+  clementine-remote-bash.sh -c play
+  clementine-remote-bash.sh -g title
+  clementine-remote-bash.sh -g status
+  clementine-remote-bash.sh -g playlists
+  clementine-remote-bash.sh -p <some-playlist>
 ```
 
 ## Useful links and background info
+### about dbus
+   * [Controlling Clementine from command line with DBus and MPRIS](https://github.com/clementine-player/Clementine/wiki/Controlling-Clementine-from-the-commandline-with-DBus-and-MPRIS)
+   * [How to activate a playlist](https://gist.github.com/biboudis/7550240)
+   
+### about protocol buffers
    * [Android Remote, another remote control for Clementine](https://github.com/clementine-player/Android-Remote)
    * [Developer Documentation for Android Remote](https://github.com/clementine-player/Android-Remote/wiki/Developer-Documentation)
    * [Clementine Remote Control Messages](https://github.com/clementine-player/Android-Remote/blob/master/app/src/main/java/de/qspool/clementineremote/backend/pb/remotecontrolmessages.proto)
