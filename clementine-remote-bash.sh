@@ -140,11 +140,23 @@ getinfo()
 # ------------------------------------------------------------------------------
 {
   case $1 in
+    albumart)
+        qdbus $DBUSBASE org.freedesktop.DBus.Properties.Get org.mpris.MediaPlayer2.Player Metadata | awk '/artUrl:/{$1=""; print substr($0,2)}'
+      ;;
     artist)
         qdbus $DBUSBASE org.freedesktop.DBus.Properties.Get org.mpris.MediaPlayer2.Player Metadata | awk '/artist:/{$1=""; print substr($0,2)}'
       ;;
+    comment)
+        qdbus $DBUSBASE org.freedesktop.DBus.Properties.Get org.mpris.MediaPlayer2.Player Metadata | awk '/comment:/{$1=""; print substr($0,2)}'
+      ;;
+    lastplayed)
+        qdbus $DBUSBASE org.freedesktop.DBus.Properties.Get org.mpris.MediaPlayer2.Player Metadata | awk '/contentCreated:/{$1=""; print substr($0,2)}' | sed 's/T/ /g'
+      ;;
     metadata)
         qdbus $DBUSBASE org.freedesktop.DBus.Properties.Get org.mpris.MediaPlayer2.Player Metadata
+      ;;
+    playcount)
+        qdbus $DBUSBASE org.freedesktop.DBus.Properties.Get org.mpris.MediaPlayer2.Player Metadata | awk '/useCount:/{$1=""; print substr($0,2)}'
       ;;
     playlist)
         qdbus --literal org.mpris.MediaPlayer2.clementine /org/mpris/MediaPlayer2  \
@@ -164,6 +176,9 @@ getinfo()
       ;;
     position)
         qdbus $DBUSBASE org.freedesktop.DBus.Properties.Get org.mpris.MediaPlayer2.Player Position
+      ;;
+    rating)
+        qdbus $DBUSBASE org.freedesktop.DBus.Properties.Get org.mpris.MediaPlayer2.Player Metadata | awk '/autoRating:/{$1=""; print substr($0,2)}'
       ;;
     shuffle)
         qdbus $DBUSBASE org.freedesktop.DBus.Properties.Get org.mpris.MediaPlayer2.Player Shuffle
